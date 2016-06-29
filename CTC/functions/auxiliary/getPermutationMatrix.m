@@ -1,22 +1,7 @@
-% SIMULATION TEST 
-
-clc; clear;
-addpath(genpath('.'));
-
-
-%% LOAD OF VARIABLES
-%  * CTC interleaver parameters
-    code_params = load_code_params();
-    
-% *************************************
-row = 1;
-blk_size = code_params(row,1)*8;
-N = code_params(row, 10);
-int_params = code_params(row, 11:end);
-
-u = randi([0, 1], blk_size, 1);
-
-% *************************************
+function [ P ] = getPermutationMatrix(blk_size, N, int_params )
+% GETPERMUTATIONMATRIX Return the permutation matrix for the CTC interleaver
+% The function takes as input the block size, N and the interleaver 
+% parameters (table 212 p.334)
 
 % 1st level matrix permutation (intrapair)
 P1 = zeros(blk_size);
@@ -48,6 +33,7 @@ for j = 0 : N-1
     P2(2*i+2, 2*j+2) = 1;    
 end
 P = P2*P1;
+P = inv(P);
 
-
+end
 
