@@ -19,4 +19,4 @@ N = code_params(row, 10);
 
 % Information message
 u = randi([0, 1], blk_size, 1);
-c1 = CRSC_encoder(u);
+c = CRSC_encoder(u, blk_size, N);
