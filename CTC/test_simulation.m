@@ -5,7 +5,7 @@ addpath(genpath('.'));
 
 
 %% LOAD OF VARIABLES
-%  * CTC interleaver parameters
+%  * CTC parameters
     code_params = load_code_params();
     
 % *************************************
