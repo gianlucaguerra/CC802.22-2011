@@ -6,7 +6,7 @@ addpath(genpath('.'));
 
 %% LOAD OF VARIABLES
 %  * CTC parameters
-    code_params = load_code_params();
+    code_params = CTC.code_params();
     
 % *************************************
 row = 1;
