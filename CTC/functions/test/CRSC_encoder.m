@@ -1,6 +1,6 @@
 function [ c ] = CRSC_encoder(u, blk_size, N)
 % CRSC_ENCODER Component encoder for the CTC
-% Rate 2/3, parameter of the code in /config/CRSC_params/
+% Rate 2/3, parameter of the code in /specs&param/specs_802_22/CRSC.m
 
     % Load the code specs
     G = CRSC.G;
@@ -12,7 +12,6 @@ function [ c ] = CRSC_encoder(u, blk_size, N)
     k = size(P,2);
     n = size(P,1);
     base_rate = k/n;
-   
 
     % State update and output function definition
     state_update = @(s,u) xor(mod(G*s,2) , mod(H*u,2));
@@ -25,7 +24,7 @@ function [ c ] = CRSC_encoder(u, blk_size, N)
     % PreEncoding (without redundancy bits)
     s = zeros(length(G),1); % Initial state zero initialized!
     for i = 0 : N-1
-        s = state_update(s,u(2*i+1:2*i+2));
+        s = state_update(s,u(k*i+1:k*i+k));    
     end
     
     % Circulation state determination
