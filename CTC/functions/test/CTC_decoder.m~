@@ -180,7 +180,7 @@ function [ u_hat ] = CTC_decoder(r, state_update_table, output_table, ...
                     ql_u = mu_eq(p_input_table(u_p+1,index2)+1, p_step_table(u_p+1,index2)+1);
                     s_p = neighbours_table(s+1, u_p+1);  % s_l
                     y = output_table(s_p+1, u_p+1);
-                    gl_y = g2(y+1, index2);
+                    gl_y = g1(y+1, index2);
                     F_p = forward_matrix(s_p+1, index2);
                     add = F_p + gl_y + ql_u;
                     % TO IMPLEMENT: PIECEWISE CONSTANT APPROXIMATION
@@ -193,7 +193,7 @@ function [ u_hat ] = CTC_decoder(r, state_update_table, output_table, ...
         end
     
         % 3.3 Extrinsic message update
-        index_b = 1;
+        index_b = N;
         index_f = 1;
         for l = 1 : N                             % This is a matlab index!
             for u = 0 : 2^crsc_k -1
@@ -201,7 +201,7 @@ function [ u_hat ] = CTC_decoder(r, state_update_table, output_table, ...
                 for s = 0 : 2^crsc_v -1
                     s_n = state_update_table(s+1, u+1);
                     y = output_table(s+1, u+1);
-                    gl_y = g2(y+1, l);
+                    gl_y = g1(y+1, l);
                     F = forward_matrix(s+1, index_f);
                     B = backward_matrix(s_n+1, index_b);
                     add = F + B + gl_y;
@@ -211,8 +211,7 @@ function [ u_hat ] = CTC_decoder(r, state_update_table, output_table, ...
                 extrinsic_matrix(u+1, l) = summ;
             end
             index_f = index_f + 1;
-            index_b = index_b + 1;
-            % index_b = mod(index_b + 1, N);        
+            index_b = mod(index_b + 1, N);        
         end
         E2 = extrinsic_matrix;      
     end

@@ -66,7 +66,7 @@ disp(' ');
 
 % Channel
 disp('CHANNEL:');
-Eb_N0_dB = 5;
+Eb_N0_dB = 20;
 Eb_N0 = 10^(Eb_N0_dB/10);
 Es = 1;
 sigma_w = sqrt(Es/(2*R*log2(M)*Eb_N0)); 
@@ -79,7 +79,7 @@ r = s + w;
 modulation_table = getModulationTable(size(CRSC.P,1), L, M); 
 [p_input_table, p_step_table] = getPermutationTables(N, int_params);
 % tic;
-n_it = 10;
+n_it = 1;
 u_hat = CTC_decoder(r, state_update_table, output_table,...
                   neighbours_table, modulation_table, sigma_w,...
                   P, N, n_it, p_input_table, p_step_table);
