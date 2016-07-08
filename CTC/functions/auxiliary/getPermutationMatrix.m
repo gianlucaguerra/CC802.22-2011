@@ -33,7 +33,7 @@ for j = 0 : N-1
     P2(2*i+2, 2*j+2) = 1;    
 end
 P = P2*P1;
-P = inv(P);
+P = P.';
 
 end
 

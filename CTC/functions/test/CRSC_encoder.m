@@ -1,4 +1,4 @@
-function [ c ] = CRSC_encoder(u, blk_size, N)
+function [ c ] = CRSC_encoder(u, N)
 % CRSC_ENCODER Component encoder for the CTC
 % Rate 2/3, parameter of the code in /specs&param/specs_802_22/CRSC.m
 
@@ -11,16 +11,14 @@ function [ c ] = CRSC_encoder(u, blk_size, N)
     
     k = size(P,2);
     n = size(P,1);
-    base_rate = k/n;
 
     % State update and output function definition
     state_update = @(s,u) xor(mod(G*s,2) , mod(H*u,2));
     output = @(s,u) xor(mod(M*s,2) , mod(P*u,2));
 
     % Codeword initialization
-    c = zeros(blk_size/base_rate, 1);
-    parity_offset = length(u)+1;
-
+    c = zeros(N-1, n);
+    
     % PreEncoding (without redundancy bits)
     s = zeros(length(G),1); % Initial state zero initialized!
     for i = 0 : N-1
@@ -37,8 +35,7 @@ function [ c ] = CRSC_encoder(u, blk_size, N)
     for i = 0 : N-1
         u_i = u(k*i+1:k*i+k);
         y = output(s,u_i);
-        c(k*i+1:k*i+k) = y(1:k);          % Systematic bits of the codeword
-        c(parity_offset+i) = y(k+1:end);  % Parity check bits
+        c(i+1,:) = y;
         s = state_update(s,u_i);
     end   
 end
