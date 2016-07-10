@@ -22,12 +22,18 @@ disp(' ');
 %   conform:         B2B
 %   modulation:      2 - PAM 
 
+% Reminder: 1/2 --> 2
+%           2/3 --> 7
+%           3/4 --> 3
+%           5/6 --> 9
+
+row = 45;
+rate_index = 3;
+
 disp('CODE:');
-row = 46;
-%row = 1;
 blk_size = code_params(row,1)*8;
 disp(['Block length: ', num2str(blk_size),' bit.']);
-codeword_length = code_params(row,2)*8;
+codeword_length = code_params(row,rate_index)*8;
 disp(['Codeword length: ', num2str(codeword_length),' bit.']);
 R = blk_size/codeword_length;
 disp(['Rate: ', num2str(R),'.']);
@@ -52,9 +58,22 @@ P = getPermutationMatrix(blk_size, N, int_params); % Interleaver permutations
 disp('Generating look-up table for the CRSC component code...'); % Look-up tables generation
 [output_table, state_update_table, neighbours_table] = getLookUpTables();
 
+disp('Generating puncturing pattern...'); % Puncturing pattern generation
+switch R
+    case 1/2 
+        puncturing_vector = CTC.puncturing_matrix(1,:);
+    case 2/3
+        puncturing_vector = CTC.puncturing_matrix(2,:);
+    case 3/4
+        puncturing_vector = CTC.puncturing_matrix(3,:);
+    case 5/6
+        puncturing_vector = CTC.puncturing_matrix(4,1:end-1);
+end
+puncturing_pattern = getPuncturingPattern( puncturing_vector, N );
+
 tic;
 %c = CTC_encoder(u, state_update_table, output_table, N, P);
-c = CTC_enc_p(u, state_update_table, output_table, N, P);
+c = CTC_enc_p(u, state_update_table, output_table, N, P, puncturing_pattern);
 time = toc;
 disp(['Encoding time with CTC_encoder: ', num2str(time), ' seconds.']);
 disp(' ');

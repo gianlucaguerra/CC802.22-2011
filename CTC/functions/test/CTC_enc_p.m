@@ -1,5 +1,5 @@
 function [ c ] = CTC_enc_p( u, crsc_state_update_table,...
-                                 crsc_output_table, N, P )
+                               crsc_output_table, N, P, puncturing_pattern )
 % CTC_ENCODER Basic DUO Binary Convolutional Turbo Code (CTC) encoder 
 % of rate 1/2
 
@@ -54,7 +54,7 @@ function [ c ] = CTC_enc_p( u, crsc_state_update_table,...
         
     end
     
-    c = reshape(c.',1,[]);
-
+    c = reshape(c.',[],1);
+    c = c(puncturing_pattern~=0);
 end
 
