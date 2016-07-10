@@ -1,4 +1,4 @@
-function [ c ] = CTC_encoder( u, crsc_state_update_table,...
+function [ c ] = CTC_enc_p( u, crsc_state_update_table,...
                                  crsc_output_table, N, P )
 % CTC_ENCODER Basic DUO Binary Convolutional Turbo Code (CTC) encoder 
 % of rate 1/2
@@ -49,9 +49,12 @@ function [ c ] = CTC_encoder( u, crsc_state_update_table,...
         o = crsc_output_table(s2+1, i2(l+1)+1);         %  |
         out2 = num2output(o);                      %  |  2nd code component
         s2 = crsc_state_update_table(s2+1,i2(l+1)+1);   %  |
+                        
+        c(l+1,:) = [out1; out2(crsc_k+1:end)];
         
-        c(l+1,:) = [out1; out2(crsc_k+1:end)];        
     end
     
+    c = reshape(c.',1,[]);
+
 end
 

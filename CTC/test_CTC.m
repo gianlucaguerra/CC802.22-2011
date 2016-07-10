@@ -1,4 +1,4 @@
-% SIMULATION TEST 
+% CTC TEST 
 
 clc; clear;
 addpath(genpath('.'));
@@ -24,6 +24,7 @@ disp(' ');
 
 disp('CODE:');
 row = 46;
+%row = 1;
 blk_size = code_params(row,1)*8;
 disp(['Block length: ', num2str(blk_size),' bit.']);
 codeword_length = code_params(row,2)*8;
@@ -34,6 +35,10 @@ disp(' ');
 
 % Information message
 u = randi([0, 1], blk_size, 1);
+%u = ones(blk_size, 1);
+%u = zeros(blk_size, 1);
+%u = [1; 0; 0; 0 ; zeros(blk_size-4,1)];
+
 
 % Encoding (epsilon)
 disp('ENCODER:');
@@ -48,7 +53,8 @@ disp('Generating look-up table for the CRSC component code...'); % Look-up table
 [output_table, state_update_table, neighbours_table] = getLookUpTables();
 
 tic;
-c = CTC_encoder(u, state_update_table, output_table, N, P);
+%c = CTC_encoder(u, state_update_table, output_table, N, P);
+c = CTC_enc_p(u, state_update_table, output_table, N, P);
 time = toc;
 disp(['Encoding time with CTC_encoder: ', num2str(time), ' seconds.']);
 disp(' ');
@@ -66,7 +72,7 @@ disp(' ');
 
 % Channel
 disp('CHANNEL:');
-Eb_N0_dB = 20;
+Eb_N0_dB = 1;
 Eb_N0 = 10^(Eb_N0_dB/10);
 Es = 1;
 sigma_w = sqrt(Es/(2*R*log2(M)*Eb_N0)); 
@@ -78,15 +84,15 @@ r = s + w;
 % MAP decoding
 modulation_table = getModulationTable(size(CRSC.P,1), L, M); 
 [p_input_table, p_step_table] = getPermutationTables(N, int_params);
-% tic;
-n_it = 1;
+n_it = 8;
 u_hat = CTC_decoder(r, state_update_table, output_table,...
                   neighbours_table, modulation_table, sigma_w,...
                   P, N, n_it, p_input_table, p_step_table);
 time = toc;
 error_num = sum(u ~= u_hat);
-disp('Deconding algorithm: BCJR.');
-disp(['Decoding time with CRSC_dencoder: ', num2str(time), ' seconds.']);
+disp('Deconding: Message passing through BCJR per code component.');
+disp(['Number of iterations: ', num2str(n_it),'.']);
+disp(['Decoding time with CTC_dencoder: ', num2str(time), ' seconds.']);
 disp(['Number of error after the decoding: ', num2str(error_num), '.']);
 P_bit = error_num./blk_size;
 disp(['BER: ', num2str(P_bit), '.']);

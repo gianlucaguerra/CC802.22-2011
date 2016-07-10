@@ -19,7 +19,7 @@ disp(' ');
 %% CRSC ENCODER/DECODER TEST 
 
 % I choose row 5 of the code params
-row = 5;
+row = 41;
 
 blk_size = code_params(row,1) * 8;
 N = code_params(row, 10);
@@ -55,7 +55,7 @@ s = L(d);
 disp(' ');
 
 % Channel
-Eb_N0_dB = 5;
+Eb_N0_dB = 1;
 Eb_N0 = 10^(Eb_N0_dB/10);
 R = 2/3;
 Es = 1;
@@ -75,3 +75,6 @@ error_num = sum(u ~= u_hat);
 disp('Deconding algorithm: BCJR.');
 disp(['Decoding time with CRSC_dencoder: ', num2str(time), ' seconds.']);
 disp(['Number of error after the decoding: ', num2str(error_num), '.']);
+P_bit = error_num./blk_size;
+disp(['BER: ', num2str(P_bit), '.']);
+disp(' ');
