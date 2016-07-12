@@ -1,6 +1,6 @@
 function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
              neighbours_table, modulation_table, sigma_w, ...
-             P, N, n_it, p_input_table, p_step_table )
+             P, N, n_it, p_input_table, p_step_table, puncturing_pattern )
 % CTC_DECODER: Basic CTC decoding through message passing 
     
     % CRSC code component params
@@ -9,6 +9,22 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
     crsc_v = length(CRSC.G);
     
 %   piece_const = log(1+exp(-(0:5)));% TO IMPLEMENT AND SEE THE DIFFERENCE!
+
+    % De-puncturing of the received sequence in a N x (2n-k) matrix
+    r_dep = zeros(N, 2*crsc_n-crsc_k);
+    index_r = 0;
+    index_p = 0;
+    for i = 0 : N -1  
+         for j = 0 : 2*crsc_n-crsc_k-1
+            if (puncturing_pattern(index_p+1) == 1)
+                 r_dep(i+1, j+1) = r(index_r+1);
+                 index_r = index_r + 1;
+            else
+                 r_dep(i+1, j+1) = 0;
+            end
+            index_p = index_p + 1;
+         end
+    end
 
     % MESSAGE PASSING DECODING ALGORITHM
 
@@ -23,14 +39,15 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
     g2 = zeros(2^crsc_n, N);      % Row: output | Column: step l in blocks   
     % To compute g2 we use must rebuild the part due to the lower encoder
     % using the inverse of the permutation matrix P^-1 = P^T
-    r1 = r(:,1:crsc_n);
-    r2 = [reshape(P*(reshape(r(:,[1,2]).', 1,[]).'),2,[]).',r(:, crsc_n+1:end)];
+    r1 = r_dep(:,1:crsc_n);
+    r2 = [reshape(P*(reshape(r_dep(:,[1,2]).', 1,[]).'),2,[]).',r_dep(:, crsc_n+1:end)];
     for l = 0 : N - 1
         for  y = 0 : 2^crsc_n - 1
+            mod_y = modulation_table(y+1,:).*puncturing_pattern(l*(2*crsc_n-crsc_k)+1:l*(2*crsc_n-crsc_k)+crsc_n).';
             g1(y+1, l+1) = ...
-                    sum(abs(r1(l+1,:) - modulation_table(y+1,:)).^2);
+                    sum(abs(r1(l+1,:) - mod_y).^2);
             g2(y+1, l+1) = ...
-                    sum(abs(r2(l+1,:) - modulation_table(y+1,:)).^2);    
+                    sum(abs(r2(l+1,:) - mod_y).^2);    
         end
     end
     g1 = -1/(2*sigma_w^2).*g1;
