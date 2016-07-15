@@ -28,7 +28,7 @@ disp(' ');
 %           5/6 --> 9
 
 row = 46;
-rate_index = 9;
+rate_index = 2;
 
 disp('CODE:');
 blk_size = code_params(row,1)*8;
@@ -91,7 +91,7 @@ disp(' ');
 
 % Channel
 disp('CHANNEL:');
-Eb_N0_dB = 2;
+Eb_N0_dB = 1;
 Eb_N0 = 10^(Eb_N0_dB/10);
 Es = 1;
 sigma_w = sqrt(Es/(2*R*log2(M)*Eb_N0)); 
@@ -106,7 +106,7 @@ modulation_table = getModulationTable(size(CRSC.P,1), L, M);
 n_it = 8;
 u_hat = CTC_dec_p(r, state_update_table, output_table,...
                   neighbours_table, modulation_table, sigma_w,...
-                  P, N, n_it, p_input_table, p_step_table, puncturing_pattern);
+                  N, n_it, p_input_table, p_step_table, puncturing_pattern);
 time = toc;
 error_num = sum(u ~= u_hat);
 disp('Deconding: Message passing through BCJR per code component.');

@@ -1,6 +1,6 @@
 function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
              neighbours_table, modulation_table, sigma_w, ...
-             P, N, n_it, p_input_table, p_step_table, puncturing_pattern )
+             N, n_it, p_input_table, p_step_table, puncturing_pattern )
 % CTC_DECODER: Basic CTC decoding through message passing 
     
     % CRSC code component params
@@ -40,14 +40,15 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
     % To compute g2 we use must rebuild the part due to the lower encoder
     % using the inverse of the permutation matrix P^-1 = P^T
     r1 = r_dep(:,1:crsc_n);
-    r2 = [reshape(P*(reshape(r_dep(:,[1,2]).', 1,[]).'),2,[]).',r_dep(:, crsc_n+1:end)];
+    %r2 = [reshape(P*(reshape(r_dep(:,[1,2]).', 1,[]).'),2,[]).',r_dep(:, crsc_n+1:end)];
+    r2 = r_dep(:, crsc_n+1:end);
     for l = 0 : N - 1
         for  y = 0 : 2^crsc_n - 1
-            mod_y = modulation_table(y+1,:).*puncturing_pattern(l*(2*crsc_n-crsc_k)+1:l*(2*crsc_n-crsc_k)+crsc_n).';
+           mod_y = modulation_table(y+1,:).*puncturing_pattern(l*(2*crsc_n-crsc_k)+1:l*(2*crsc_n-crsc_k)+crsc_n).';
             g1(y+1, l+1) = ...
                     sum(abs(r1(l+1,:) - mod_y).^2);
             g2(y+1, l+1) = ...
-                    sum(abs(r2(l+1,:) - mod_y).^2);    
+                    sum(abs(r2(l+1,:) - mod_y(crsc_k+1:crsc_n)).^2);    
         end
     end
     g1 = -1/(2*sigma_w^2).*g1;

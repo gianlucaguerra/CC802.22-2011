@@ -11,8 +11,8 @@ code_params = CTC.code_params();  % CTC main parameters table
 % |     PARAMETERS TO CHANGE      |
 % '-------------------------------'
     code_params_row = 46;
-    modulation = '64-QAM';
-    rate = '5/6';
+    modulation = 'QPSK';
+    rate = '1/2';
     
     Eb_N0_dB = 10;
 
@@ -21,44 +21,75 @@ code_params = CTC.code_params();  % CTC main parameters table
 % PARAMETERS
 blk_size = code_params(code_params_row,1)*8; 
 
-% Codeword length, and M 
+% Codeword length, M and constellation map
 switch [modulation, rate]
     case ['QPSK', '1/2']
         codeword_length = code_params(code_params_row, 2)*8;
         M = 4;
+        constellation_table = BICM.QPSK;
+        conform = BICM.conform_QPSK;
     case ['QPSK', '3/4']
         codeword_length = code_params(code_params_row, 3)*8;
         M = 4;
+        constellation_table = BICM.QPSK;
+        conform = BICM.conform_QPSK;
     case ['16-QAM', '1/2']
         codeword_length = code_params(code_params_row, 4)*8;
         M = 16;
+        constellation_table = BICM.QAM16;
+        conform = BICM.conform_QAM16;
     case ['16-QAM', '3/4']
         codeword_length = code_params(code_params_row, 5)*8;
         M = 16;
+        constellation_table = BICM.QAM16;
+        conform = BICM.conform_QAM16;
     case ['64-QAM', '1/2']
         codeword_length = code_params(code_params_row, 6)*8;
         M = 64;
+        constellation_table = BICM.QAM64;
+        conform = BICM.conform_QAM64;
     case ['64-QAM', '2/3']
         codeword_length = code_params(code_params_row, 7)*8;
         M = 64;
+        constellation_table = BICM.QAM64;
+        conform = BICM.conform_QAM64;
     case ['64-QAM', '3/4']
         codeword_length = code_params(code_params_row, 8)*8;
         M = 64;
+        constellation_table = BICM.QAM64;
+        conform = BICM.conform_QAM64;
     case ['64-QAM', '5/6']
         codeword_length = code_params(code_params_row, 9)*8;
         M = 64;
+        constellation_table = BICM.QAM64;
+        conform = BICM.conform_QAM64;
     otherwise
         codeword_length = blk_size./str2num(rate);   
         M = 2;
+        constellation_table = BICM.PAM2;
+        conform = BICM.conform_PAM2;
 end
 
-ctc_int_params = code_params(code_params_row, 11:end); % CTC interleaver parameters
 N = code_params(code_params_row, 10); % Number of input pairs
 
 % CTC interleaver and BICM bit interleaver matrices and tables
+ctc_int_params = code_params(code_params_row, 11:end); % CTC interleaver parameters
 ctc_P_matrix = getPermutationMatrix(blk_size, N, ctc_int_params); % UP2DOWN  CTC interleaver permutation matrix
 [ctc_p_input_table, ctc_p_step_table] = getPermutationTables(N, ctc_int_params); % DOWN2UP CTC permutation tables
-% (TO DO  bit interleaver for BICM)
+if (codeword_length > 2304)       % Maximal length for the vector to be interleaved: 2304 bit
+    K = codeword_length/2;
+    bit_int_params = BICM.bit_int_params(BICM.bit_int_params(:,1)==K, 2:end); % BICM interleaver parameters
+    [bit_P_matrix, bit_p_table] = getBitInterleaver(K, bit_int_params);
+    bit_P_matrix = blkdiag(bit_P_matrix, bit_P_matrix);
+    bit_p_table = [bit_p_table, bit_p_table+K];
+else
+    K = codeword_length;
+    bit_int_params = BICM.bit_int_params(BICM.bit_int_params(:,1)==K, 2:end); % BICM interleaver parameters
+    [bit_P_matrix, bit_p_table] = getBitInterleaver(K, bit_int_params);
+end
+
+% Conform table
+conform_table = getConformTable(M, conform);
 
 % CRSC code component output and state update tables
 [crsc_output_table, crsc_state_update_table, crsc_neighbours_table] = getLookUpTables();
@@ -98,16 +129,16 @@ u = randi([0, 1], blk_size, 1);
 
 % ENCODER: CTC Encoding with puncturing, the output is a column vector of
 % length codeword_length
-c = CTC_enc_p(u, crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern);
+c = CTC_enc_p(u, crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern)
 
-% Bit interleaving for BICM (TO DO)
-
+% Bit interleaving for BICM
+c_i = bit_P_matrix * c;
 
 % CONFORM: The conform map gives a matrix codeword_length/log2(M) x log2(M)
-d = reshape(c, [], log2(M));
+d = reshape(c_i, [], log2(M));
 
 % CONSTELLATION MAP 
-s = constellation_mapper (d, M);
+s = constellation_mapper (d, M, constellation_table);
 
 % CHANNEL: AWGN memoryless
 Eb_N0 = 10^(Eb_N0_dB/10);
@@ -123,6 +154,10 @@ else
     w = w .* sigma_w/sqrt(2);
 end
 r = s + w;
+
+% DECODING
+u_hat = BICM_decoder(r, M, sigma_w, constellation_table, codeword_length, N, ...
+           conform_table, bit_p_table, puncturing_pattern);
 
 % DISPLAY MESSAGES
 disp('PARAMETERS:');
