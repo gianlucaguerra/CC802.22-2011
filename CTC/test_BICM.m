@@ -10,12 +10,13 @@ code_params = CTC.code_params();  % CTC main parameters table
 % .-------------------------------.
 % |     PARAMETERS TO CHANGE      |
 % '-------------------------------'
-    code_params_row = 46;
-    modulation = 'QPSK';
+    code_params_row = 41;
+    modulation = '2-PAM';
     rate = '1/2';
     
-    Eb_N0_dB = 10;
-
+    SNR_dB = 1;
+    
+    n_it = 20;
 % ---------------------------------
 
 % PARAMETERS
@@ -129,47 +130,64 @@ u = randi([0, 1], blk_size, 1);
 
 % ENCODER: CTC Encoding with puncturing, the output is a column vector of
 % length codeword_length
-c = CTC_enc_p(u, crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern)
+c = CTC_enc_p(u, crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern);
 
 % Bit interleaving for BICM
 c_i = bit_P_matrix * c;
 
 % CONFORM: The conform map gives a matrix codeword_length/log2(M) x log2(M)
-d = reshape(c_i, [], log2(M));
+d = reshape(c_i, log2(M), []).';
 
 % CONSTELLATION MAP 
 s = constellation_mapper (d, M, constellation_table);
 
 % CHANNEL: AWGN memoryless
-Eb_N0 = 10^(Eb_N0_dB/10);
+SNR = 10^(SNR_dB/10);
 Es = 1;
-sigma_w = sqrt(Es/(2*R*log2(M)*Eb_N0));
+%sigma_w = sqrt(Es/(2*R*log2(M)*Eb_N0));
 w_I = randn(size(s,1),size(s,2));  % In-phase noise component
 if strcmp(modulation, '2-PAM')
+    sigma_w = sqrt(Es/SNR); %!!
     w = w_I;                       % Only in-phase component pattern
     w = w .*sigma_w;               % Scaling the noise
 else
+    sigma_w = sqrt(Es/(2*SNR)); %!!
     w_Q = randn(size(s,1),size(s,2));  % Quadrature noise component
     w = w_I + w_Q;    % Noise pattern
-    w = w .* sigma_w/sqrt(2);
+    w = w .* sigma_w;%/sqrt(2);
 end
 r = s + w;
 
 % DECODING
+tic
 u_hat = BICM_decoder(r, M, sigma_w, constellation_table, codeword_length, N, ...
-           conform_table, bit_p_table, puncturing_pattern);
-
+          conform_table, bit_p_table, puncturing_pattern, ...
+          crsc_output_table, crsc_state_update_table, crsc_neighbours_table,...
+          ctc_p_input_table, ctc_p_step_table, n_it);
+toc      
+% tic
+% u_hat = BICM_decoder_mex(r, M, sigma_w, constellation_table, codeword_length, N, ...
+%            conform_table, bit_p_table, puncturing_pattern, ...
+%            crsc_output_table, crsc_state_update_table, crsc_neighbours_table,...
+%            ctc_p_input_table, ctc_p_step_table, n_it);
+% toc
+% ERROR EVALUATION
+error_num = sum(u ~= u_hat);
+P_bit = error_num./blk_size;
+       
 % DISPLAY MESSAGES
 disp('PARAMETERS:');
 disp(' ');
 disp(['Code parameters row: ', num2str(code_params_row),'.']);
 disp(['Modulation: ', modulation,'.']);
 disp(['Rate: ', rate,'.']);
-disp(['Es/N0: ' , num2str(Eb_N0_dB), ' dB.']);
+disp(['Eb/N0: ' , num2str(SNR_dB), ' dB.']);
 disp(['Block length: ', num2str(blk_size),'.']);
 disp(['Codeword length: ', num2str(codeword_length),'.']);
-
-
+disp(' ');
+disp(['Number of error after the decoding: ', num2str(error_num), '.']);
+disp(['BER: ', num2str(P_bit), '.']);
+disp(' ');
 
 
 

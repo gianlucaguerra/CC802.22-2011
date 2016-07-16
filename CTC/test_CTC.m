@@ -103,11 +103,16 @@ r = s + w;
 % MAP decoding
 modulation_table = getModulationTable(size(CRSC.P,1), L, M); 
 [p_input_table, p_step_table] = getPermutationTables(N, int_params);
-n_it = 8;
+n_it = 20;
 u_hat = CTC_dec_p(r, state_update_table, output_table,...
                   neighbours_table, modulation_table, sigma_w,...
                   N, n_it, p_input_table, p_step_table, puncturing_pattern);
 time = toc;
+tic
+u_hat = CTC_dec_p_mex(r, state_update_table, output_table,...
+                  neighbours_table, modulation_table, sigma_w,...
+                  N, n_it, p_input_table, p_step_table, puncturing_pattern);
+toc
 error_num = sum(u ~= u_hat);
 disp('Deconding: Message passing through BCJR per code component.');
 disp(['Number of iterations: ', num2str(n_it),'.']);

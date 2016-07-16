@@ -18,10 +18,11 @@ function [ bit_P_matrix, bit_p_table ] = getBitInterleaver(K, bit_int_params )
             I = mod( K - p + k + q * p * mod(-k-p*I, K), K);
         end
         bit_P_matrix(k+1, I+1) = 1;
-        bit_p_table(k+1) = I;
+ %       bit_p_table(k+1) = I;
     end
 
     bit_P_matrix = inv(bit_P_matrix); 
+    bit_p_table = (bit_P_matrix*(0:length(bit_P_matrix)-1).').';
     
 end
 

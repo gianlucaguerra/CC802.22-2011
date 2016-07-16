@@ -1,0 +1,17 @@
+MEX {
+	global:
+		mexFunction;
+		emlrtMexFcnProperties;
+		CTC_dec_p;
+		emxEnsureCapacity;
+		emxFree_int32_T;
+		emxFree_real_T;
+		emxInit_int32_T;
+		emxInit_real_T;
+		emxInit_real_T1;
+		CTC_dec_p_initialize;
+		CTC_dec_p_terminate;
+		CTC_dec_p_atexit;
+	local:
+		*;
+};

@@ -4,9 +4,13 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
 % CTC_DECODER: Basic CTC decoding through message passing 
     
     % CRSC code component params
-    crsc_k = size(CRSC.P,2);
-    crsc_n = size(CRSC.P,1);
-    crsc_v = length(CRSC.G);
+    %crsc_k = size(CRSC.P,2);
+    %crsc_n = size(CRSC.P,1);
+    %crsc_v = length(CRSC.G);
+    
+    crsc_k = 2;
+    crsc_n = 3;
+    crsc_v = 3;
     
 %   piece_const = log(1+exp(-(0:5)));% TO IMPLEMENT AND SEE THE DIFFERENCE!
 
@@ -56,8 +60,8 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
     g1 = bsxfun(@minus, g1, max(g1)); % Normalization
     g2 = bsxfun(@minus, g2, max(g2)); % Normalization
     
-    E2 = 0;
-    E1 = 0;
+    E2 = zeros(2^crsc_k, N);
+    E1 = zeros(2^crsc_k, N);
    
     for cont = 1 : n_it
     
@@ -245,9 +249,12 @@ function [ u_hat ] = CTC_dec_p(r, state_update_table, output_table, ...
     % Maximum a posteriori estimate
     [ ~ , u_hat_num ] = max(E2+q+E1);
     u_hat = zeros(length(u_hat_num) * crsc_k, 1);
-    num2input = @(i) mod(fix(i./(2.^(crsc_k-1:-1:0)).'),2);
+    %num2input = @(i) mod(fix(i./(2.^(crsc_k-1:-1:0)).'),2);
     for i = 0 : length(u_hat_num)-1         % From u_hat_num to u_hat
-       u_hat(crsc_k*i+1:crsc_k*i+crsc_k) = num2input(u_hat_num(i+1)-1);
+       %u_hat(crsc_k*i+1:crsc_k*i+crsc_k) = num2input(u_hat_num(i+1)-1);
+       u_hat_num_i = u_hat_num(i+1)-1; 
+       u_hat(crsc_k*i+2) = mod(u_hat_num_i,2);
+       u_hat(crsc_k*i+1) = mod(fix(u_hat_num_i/2),2);
     end
     
 end
