@@ -7,18 +7,14 @@ addpath(genpath('.'));
 % |     PARAMETERS TO CHANGE      |
 % '-------------------------------'
     code_params_row = 41;
-    rate = '1/2';
+    rate = '1/2';                                                               % TO CHANGE
         
-    Eb_N0_dB = [(0:0.15:10.15);
-                (0:0.09:6.1);
-                (0:0.1:0.5), (0.52:0.02:1.5), (1.6:0.1:2.7);
-                 0, 0.1, 0.2, (0.22:0.02:1.5);
-                 0, 0.1, 0.2, (0.22:0.02:1.5)];
+    Eb_N0_dB_it20_minsum = (0:0.20:5);                            % TO CHANGE
+   
     
-    it_scheme = [1, 2, 4, 10, 20];
+    it_scheme = 20;  % 1 2 4 10 20                                               % TO CHANGE
      
-    tot_bit = 1e7;
-    error_threshold = 1e4;
+    tot_bit = 1e7;  
 % ---------------------------------
 
 
@@ -31,8 +27,8 @@ codeword_length = blk_size./str2num(rate);                                      
 R = str2num(rate);                                                                       % Code rate
 
 % Simulation parameters
-tot_blk = ceil(tot_bit/codeword_length);                                                 % Total number of blocks to send
-Eb_N0 = 10.^(Eb_N0_dB./10);
+tot_blk = ceil(tot_bit./codeword_length);                                                 % Total number of blocks to send
+Eb_N0 = 10.^(Eb_N0_dB_it20_minsum./10);                                                      % TO CHANGE
 
 % Modulation parameters
 M = 2;                                                                                   % Number of constellation symbols
@@ -61,8 +57,8 @@ end
 puncturing_pattern = getPuncturingPattern( puncturing_vector, N );                      % Puncturing pattern
 
 % Error matrix initialization
-error_num = zeros(length(it_scheme), size(Eb_N0_dB,2));
-error_blk = zeros(length(it_scheme), size(Eb_N0_dB,2));
+BER_it20_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
+PER_it20_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
 
 % TRANSMISSION SCHEME
 
@@ -75,49 +71,52 @@ error_blk = zeros(length(it_scheme), size(Eb_N0_dB,2));
 %                  <----------------------->
 %                           MODULATOR
 
+
 % Noise pattern generation (always the same)
 w = randn(codeword_length,1);
 sigma_w = sqrt(Es./(2.*R.*log2(M).*Eb_N0));                                  % Noise for each SNR
 
-for n_blk = 1 : tot_blk                                                      % Across all packet
-
+% Information message generation
+s = zeros(tot_blk, codeword_length);
+u = zeros(tot_blk, blk_size);
+parfor i = 1 : tot_blk
     % Information block generation
-    u = randi([0, 1], blk_size, 1);
+    u(i,:) = randi([0, 1], blk_size, 1);
     
     % ENCODER: CTC Encoding with puncturing, the output is a column vector of
     % length codeword_length
-    c = CTC_enc_p(u, crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern);
+    c = CTC_enc_p(u(i,:).', crsc_state_update_table, crsc_output_table, N, ctc_P_matrix, puncturing_pattern);
     
     % MODULATOR
-    s = L(c);
-    
-    for snr_index = 1 : size(Eb_N0,2)                                           % Across all SNR
-        for it_index = 1 : length(it_scheme)                                        % Across all iteration
-            if (error_num(it_index, snr_index)< error_threshold)
-                w_s = w .* sigma_w(it_index, snr_index);                                    % Noise scaling
-                r = s + w_s;                                                                % Received sequence
-            
-                u_hat = CTC_dec_p_mex(r, crsc_state_update_table, crsc_output_table,...               % Decoding
-                  crsc_neighbours_table, modulation_table, sigma_w(snr_index),...
-                  N, it_scheme(it_index), ctc_p_input_table, ctc_p_step_table, puncturing_pattern);
-        
-                error_num(it_index, snr_index) = error_num(it_index, snr_index) + sum(u ~= u_hat); % Error count
-                if (error_num >= 0)
-                    error_blk(it_index, snr_index) = error_blk(it_index, snr_index) + 1;
-                end
-            end
-        end
+    s(i,:) = L(c);
+   
+end
+
+ parfor snr_index = 1 : length(Eb_N0)                                        % Across all SNR
+    errors = 0;
+    errors_blk = 0;
+    w_s = w .* sigma_w(snr_index);                                    % Noise scaling      
+    for n_blk = 1 : tot_blk                                                      % Across all packet
+        r = s(n_blk,:).' + w_s;                                                           % Received sequence
+%         u_hat = CTC_dec_p_mex(r, crsc_state_update_table, crsc_output_table,...         % Decoding
+%                crsc_neighbours_table, modulation_table, sigma_w(snr_index),...
+%                N, it_scheme, ctc_p_input_table, ctc_p_step_table, puncturing_pattern);
+        u_hat = CTC_dec_minsum_mex(r, crsc_state_update_table, crsc_output_table,...         % Decoding
+               crsc_neighbours_table, modulation_table, sigma_w(snr_index),...
+               N, it_scheme, ctc_p_input_table, ctc_p_step_table, puncturing_pattern);
+           
+        errors = errors + sum(u(n_blk,:) ~= u_hat.'); % Error count
+         if ( sum(u(n_blk,:) ~= u_hat.')> 0)
+             errors_blk = errors_blk + 1;
+         end 
     end
     
-    if  mod(n_blk,100) == 0
-        BER = error_num./(n_blk*blk_size);
-        PER = error_blk./n_blk;
-        save([pwd,'/results/p_bit_preview_',num2str(n_blk),'.mat'],'BER', 'PER', 'Eb_N0_dB');
-    end
+    BER_it20_minsum(snr_index) = errors./(tot_bit);                              % TO CHANGE
+    PER_it20_minsum(snr_index) = errors_blk./tot_blk;                            % TO CHANGE
+       
+    disp(['w3 :',num2str(Eb_N0_dB_it20_minsum(snr_index))]);                     % TO CHANGE
 
 end
 
-BER = error_num./(tot_bit);
-PER = error_blk./tot_block;
-save([pwd,'/results/p_bit_preview_',num2str(n_blk),'.mat'],'BER', 'PER', 'Eb_N0_dB');
+save([pwd,'/results/p_bit_it20_minsum.mat'],'BER_it20_minsum', 'PER_it20_minsum', 'Eb_N0_dB_it20_minsum');   % TO CHANGE!!!
 

@@ -63,8 +63,8 @@ function [ u_hat ] = BICM_decoder( r, M, sigma_w, constellation_table, ...
     mu_w2d = bsxfun(@minus, mu_w2d, max(mu_w2d)); % Normalization
     
     % 3 SISTEMATIC PART, CODE1 OUTPUT, CODE2 OUTPUT and DEPUNCTURING
-    systematic_out1 = zeros(2, crsc_n*N)-5;
-    out2 = zeros(2, (crsc_n-crsc_k)*N)-5;
+    systematic_out1 = zeros(2, crsc_n*N);
+    out2 = zeros(2, (crsc_n-crsc_k)*N);
     
     index_p = 0;
     index_s = 0;

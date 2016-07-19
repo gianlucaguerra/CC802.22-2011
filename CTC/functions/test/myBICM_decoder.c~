@@ -62,17 +62,15 @@ void mexFunction( int nlhs, mxArray *plhs[],
     int r_length = codeword_length/log2(M);
     int puncturing_length = mxGetN(prhs[8]);
     
-    int con_col = mxGetN(prhs[6]);
-    int out_col = mxGetN(prhs[9]);
-    int state_col = mxGetN(prhs[10]);
-    int neigh_col = mxGetN(prhs[11]);
-    int input_col = mxGetN(prhs[12]);
-    int step_col = mxGetN(prhs[13]);
+    int numC = mxGetN(prhs[6]);
+    int numR = mxGetM(prhs[6]);
     
+    mexPrintf("%d\n", numC);
+    mexPrintf("%d\n", numR);
     
-    
-    
-    
+    if(numC != 2){
+        mexErrMsgTxt("ERRORE COLONNE.");
+    }
     
     
     
@@ -162,19 +160,18 @@ void mexFunction( int nlhs, mxArray *plhs[],
             for (d = 0; d<=1; d = d + 1){
                 summ = -DBL_MAX;
                 for (i = 0; i < M/2; i = i + 1){
-                    index = conform_table[(2*m+d)+con_col*i];
-                    add = g[index][l];
-                    for (index1 = (int)log2(M) - 2; index1 >= 0; index1 = index1 -1 ){
+                   /*index = conform_table[2*m+d][i];*/
+                    index = conform_table[0][0];
+                    /*add = g[index][l];
+                   /* for (index1 = (int)log2(M) - 2; index1 >= 0; index1 = index1 -1 ){
                         index2 = ((int)(i/pow(2,index1))) % 2;
                         add = add + input_msg[index2][(int)log2(M)-index1];
-                    }
-                   summ = log(exp(summ)+exp(add));
+                    }*/
+                   /* summ = log(exp(summ)+exp(add));*/
                 }
-               index = bit_p_table[(int)(l*log2(M))+m];
-               mexPrintf("%d\n", index);
-               mu_w2d[d][index] = summ;            
+               /* mu_w2d[d][bit_p_table[(int)(l*log2(M))+m]] = summ;   */             
             } /* normalization */
-          /*  if (mu_w2d[0][bit_p_table[(int)(l*log2(M))+m]]>=mu_w2d[1][bit_p_table[(int)(l*log2(M))+m]]){
+      /*      if (mu_w2d[0][bit_p_table[(int)(l*log2(M))+m]]>=mu_w2d[1][bit_p_table[(int)(l*log2(M))+m]]){
                 mu_w2d[0][bit_p_table[(int)(l*log2(M))+m]] = 0;
                 mu_w2d[1][bit_p_table[(int)(l*log2(M))+m]] = mu_w2d[1][bit_p_table[(int)(l*log2(M))+m]] - mu_w2d[0][bit_p_table[(int)(l*log2(M))+m]];
             }else{

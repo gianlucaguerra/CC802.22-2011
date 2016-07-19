@@ -16,17 +16,6 @@ disp(' ');
 
 %% CTC ENCODER/DECODER TEST
 
-% For the test is used the 7th row of the CTC.code_params, in particular
-%   blk_size:        30 byte
-%   rate:            1/2
-%   conform:         B2B
-%   modulation:      2 - PAM 
-
-% Reminder: 1/2 --> 2
-%           2/3 --> 7
-%           3/4 --> 3
-%           5/6 --> 9
-
 row = 46;
 rate_index = 2;
 
@@ -41,10 +30,6 @@ disp(' ');
 
 % Information message
 u = randi([0, 1], blk_size, 1);
-%u = ones(blk_size, 1);
-%u = zeros(blk_size, 1);
-%u = [1; 0; 0; 0 ; zeros(blk_size-4,1)];
-
 
 % Encoding (epsilon)
 disp('ENCODER:');
@@ -59,6 +44,7 @@ disp('Generating look-up table for the CRSC component code...'); % Look-up table
 [output_table, state_update_table, neighbours_table] = getLookUpTables();
 
 disp('Generating puncturing pattern...'); % Puncturing pattern generation
+R = 3/4;
 switch R
     case 1/2 
         puncturing_vector = CTC.puncturing_matrix(1,:);
@@ -72,7 +58,6 @@ end
 puncturing_pattern = getPuncturingPattern( puncturing_vector, N );
 
 tic;
-%c = CTC_encoder(u, state_update_table, output_table, N, P);
 c = CTC_enc_p(u, state_update_table, output_table, N, P, puncturing_pattern);
 time = toc;
 disp(['Encoding time with CTC_encoder: ', num2str(time), ' seconds.']);
@@ -107,12 +92,12 @@ n_it = 20;
 u_hat = CTC_dec_p(r, state_update_table, output_table,...
                   neighbours_table, modulation_table, sigma_w,...
                   N, n_it, p_input_table, p_step_table, puncturing_pattern);
-time = toc;
-tic
-u_hat = CTC_dec_p_mex(r, state_update_table, output_table,...
-                  neighbours_table, modulation_table, sigma_w,...
-                  N, n_it, p_input_table, p_step_table, puncturing_pattern);
-toc
+
+% tic
+% u_hat = CTC_dec_p_mex(r, state_update_table, output_table,...
+%                   neighbours_table, modulation_table, sigma_w,...
+%                   N, n_it, p_input_table, p_step_table, puncturing_pattern);
+% toc
 error_num = sum(u ~= u_hat);
 disp('Deconding: Message passing through BCJR per code component.');
 disp(['Number of iterations: ', num2str(n_it),'.']);
