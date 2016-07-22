@@ -9,10 +9,10 @@ addpath(genpath('.'));
     code_params_row = 41;
     rate = '1/2';                                                               % TO CHANGE
         
-    Eb_N0_dB_it20_minsum = (0:0.20:5);                            % TO CHANGE
+    Eb_N0_dB_it10_minsum = (0:0.25:6);                            % TO CHANGE
    
     
-    it_scheme = 20;  % 1 2 4 10 20                                               % TO CHANGE
+    it_scheme = 10;  % 1 2 4 10 20                                               % TO CHANGE
      
     tot_bit = 1e7;  
 % ---------------------------------
@@ -28,7 +28,7 @@ R = str2num(rate);                                                              
 
 % Simulation parameters
 tot_blk = ceil(tot_bit./codeword_length);                                                 % Total number of blocks to send
-Eb_N0 = 10.^(Eb_N0_dB_it20_minsum./10);                                                      % TO CHANGE
+Eb_N0 = 10.^(Eb_N0_dB_it10_minsum./10);                                                      % TO CHANGE
 
 % Modulation parameters
 M = 2;                                                                                   % Number of constellation symbols
@@ -57,8 +57,8 @@ end
 puncturing_pattern = getPuncturingPattern( puncturing_vector, N );                      % Puncturing pattern
 
 % Error matrix initialization
-BER_it20_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
-PER_it20_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
+BER_it10_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
+PER_it10_minsum = zeros(1,length(Eb_N0));                                                    % TO CHANGE
 
 % TRANSMISSION SCHEME
 
@@ -111,12 +111,12 @@ end
          end 
     end
     
-    BER_it20_minsum(snr_index) = errors./(tot_bit);                              % TO CHANGE
-    PER_it20_minsum(snr_index) = errors_blk./tot_blk;                            % TO CHANGE
+    BER_it10_minsum(snr_index) = errors./(tot_bit);                              % TO CHANGE
+    PER_it10_minsum(snr_index) = errors_blk./tot_blk;                            % TO CHANGE
        
-    disp(['w3 :',num2str(Eb_N0_dB_it20_minsum(snr_index))]);                     % TO CHANGE
+    disp(['w3 :',num2str(Eb_N0_dB_it10_minsum(snr_index))]);                     % TO CHANGE
 
 end
 
-save([pwd,'/results/p_bit_it20_minsum.mat'],'BER_it20_minsum', 'PER_it20_minsum', 'Eb_N0_dB_it20_minsum');   % TO CHANGE!!!
+save([pwd,'/results/p_bit_it10_minsum.mat'],'BER_it10_minsum', 'PER_it10_minsum', 'Eb_N0_dB_it10_minsum');   % TO CHANGE!!!
 

@@ -10,8 +10,8 @@ addpath(genpath('.'));
     code_params_row = 41;
     rate = '1/2';                                                               % TO CHANGE
         
-    Eb_N0_dB = 1;                                          % TO CHANGE    
-    it_scheme = 20;  % 1 2 4 10 20  
+    Eb_N0_dB = -1;                                          % TO CHANGE    
+    it_scheme = 1;  % 1 2 4 10 20  
     
 % ---------------------------------
 

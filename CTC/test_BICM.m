@@ -11,10 +11,10 @@ code_params = CTC.code_params();
 % |     PARAMETERS TO CHANGE      |
 % '-------------------------------'
     code_params_row = 41;
-    modulation = '2-PAM';
+    modulation = '16-QAM';
     rate = '1/2';
     
-    SNR_dB = 0.5;
+    SNR_dB = 7;
     
     n_it = 20;
 % ---------------------------------
@@ -159,19 +159,10 @@ end
 r = s + w;
 
 % DECODING
-tic
-%u_hat = myBICM_decoder(r, M, sigma_w, constellation_table, codeword_length, N, ...
-%          conform_table, bit_p_table, puncturing_pattern, ...
-%          crsc_output_table, crsc_state_update_table, crsc_neighbours_table,...
-%          ctc_p_input_table, ctc_p_step_table, n_it);
-%toc      
-tic
-u_hat = BICM_decoder(r, M, sigma_w, constellation_table, codeword_length, N, ...
+u_hat = BICM_decoder_mex(r, M, sigma_w, constellation_table, codeword_length, N, ...
            conform_table, bit_p_table, puncturing_pattern, ...
            crsc_output_table, crsc_state_update_table, crsc_neighbours_table,...
-           ctc_p_input_table, ctc_p_step_table, n_it);
-toc
-% ERROR EVALUATION
+           ctc_p_input_table, ctc_p_step_table, n_it);% ERROR EVALUATION
 length(u_hat)
 error_num = sum(u ~= u_hat);
 P_bit = error_num./blk_size;

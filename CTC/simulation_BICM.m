@@ -6,16 +6,16 @@ addpath(genpath('.'));
 % .-------------------------------.
 % |     PARAMETERS TO CHANGE      |
 % '-------------------------------'
-    code_params_row = 24;
+    code_params_row = 41;
     rate = '1/2';                                                            % TO CHANGE
-    modulation = 'QPSK';                                                     % TO CHANGE
+    modulation = '16-QAM';                                                   % TO CHANGE
     
-    SNR_dB_bimc_qpsk = [0, 0.5, 0.7, 0.9, 1.1, 1.3, 1.6, 2];                 % TO CHANGE
+    SNR_dB_bicm_16qam = (4:0.2:8);                 % TO CHANGE
    
     
     it_scheme = 20;  % 1 2 4 10 20                                           % TO CHANGE
      
-    tot_bit = 2e3;
+    tot_bit = 1e7;
 % ---------------------------------
 
 % Parameters
@@ -114,8 +114,8 @@ end
 puncturing_pattern = getPuncturingPattern( puncturing_vector, N );                      % Puncturing pattern
 
 % Error matrix initialization
-BER_bicm_qpsk = zeros(1,length(SNR_dB_bimc_qpsk));                                                    % TO CHANGE
-PER_bicm_qpsk = zeros(1,length(SNR_dB_bimc_qpsk));                                                    % TO CHANGE
+BER_bicm_16qam = zeros(1,length(SNR_dB_bicm_16qam));                                                    % TO CHANGE
+PER_bicm_16qam = zeros(1,length(SNR_dB_bicm_16qam));                                                    % TO CHANGE
 
 % TRANSMISSION SCHEME
 
@@ -130,7 +130,7 @@ PER_bicm_qpsk = zeros(1,length(SNR_dB_bimc_qpsk));                              
 
 
 % Noise pattern generation (always the same)
-SNR = 10.^(SNR_dB_bimc_qpsk./10);                                         % TO CHANGE
+SNR = 10.^(SNR_dB_bicm_16qam./10);                                         % TO CHANGE
 Es = 1;
 
 w_I = randn(codeword_length/log2(M),1);  % In-phase noise component
@@ -171,7 +171,7 @@ end
     w_s = w .* sigma_w(snr_index);                                    % Noise scaling      
     for n_blk = 1 : tot_blk                                                      % Across all packet
         r = s(n_blk,:).' + w_s;                                                           % Received sequence
-        u_hat = BICM_decoder(r, M, sigma_w(snr_index), constellation_table, codeword_length, N, ...
+        u_hat = BICM_decoder_mex(r, M, sigma_w(snr_index), constellation_table, codeword_length, N, ...
            conform_table, bit_p_table, puncturing_pattern, ...
            crsc_output_table, crsc_state_update_table, crsc_neighbours_table,...
            ctc_p_input_table, ctc_p_step_table, it_scheme);
@@ -181,12 +181,12 @@ end
          end 
     end
     
-    BER_bicm_qpsk(snr_index) = errors./(tot_bit);                              % TO CHANGE
-    PER_bicm_qpsk(snr_index) = errors_blk./tot_blk;                            % TO CHANGE
+    BER_bicm_16qam(snr_index) = errors./(tot_blk*blk_size);                              % TO CHANGE
+    PER_bicm_16qam(snr_index) = errors_blk./tot_blk;                            % TO CHANGE
        
-    disp(['w3 :',num2str(SNR_dB_bimc_qpsk(snr_index))]);                     % TO CHANGE
+    disp(['w3 :',num2str(SNR_dB_bicm_16qam(snr_index))]);                     % TO CHANGE
 
 end
 
-%save([pwd,'/results/p_bit_it20_l120.mat'],'BER_it20_l120', 'PER_it20_l120', 'Eb_N0_dB_it20_l120');   % TO CHANGE!!!
+save([pwd,'/results/p_bit_bicm_16qam.mat'],'BER_bicm_16qam', 'PER_bicm_16qam', 'SNR_dB_bicm_16qam');   % TO CHANGE!!!
 
